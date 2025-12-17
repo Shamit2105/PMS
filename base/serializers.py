@@ -4,47 +4,37 @@ import uuid
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 
-from apps.base import errors
-from apps.base.errors import PMValidationError, PMDataIntegrityException
+from . import errors
+from .errors import PMValidationError, PMDataIntegrityException
 
 
 
 class BaseSerializer(serializers.Serializer):
     """
     Base serializer with dynamic field filtering capabilities.
-    Supports field whitelisting, blacklisting, and audit field removal.
+    Supports field whitelisting(allowed), blacklisting(blocked), and audit field removal.
     """
     
-    # Define basic audit fields that can be removed
-    AUDIT_FIELDS = ['created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+    AUDIT_FIELDS = ['created_at', 'updated_at', 'created_by', 'updated_by', ]
     
     def __init__(self, *args, **kwargs):
-        """
-        Initialize serializer with dynamic field filtering options.
         
-        Args:
-            allowed_fields (list): Fields to include (whitelist)
-            removed_fields (list): Fields to exclude (blacklist)
-            remove_audit (bool): Remove audit fields
-        """
-        # Extract filtering parameters from kwargs
         allowed_fields = kwargs.pop('allowed_fields', [])
         removed_fields = kwargs.pop('removed_fields', [])
         remove_audit_fields = kwargs.pop('remove_audit', False)
         
-        # Convert field lists to nested maps for efficient lookup
+        # to convert field lists to nested maps for efficient lookup
         self._allowed_fields_map = self.extract_nested_fields(allowed_fields)
         self._removed_fields_map = self.extract_nested_fields(removed_fields)
         self._remove_audit = remove_audit_fields
         
-        # Initialize parent serializer
         super().__init__(*args, **kwargs)
         
-        # Apply field filtering
+        # apply field filtering
         self._apply_allowed_fields()
         self._apply_removed_fields()
         
-        # Remove audit fields if requested
+        # remove audit fields if requested
         if remove_audit_fields:
             self._remove_audit_fields()
     
@@ -82,7 +72,7 @@ class BaseSerializer(serializers.Serializer):
             current = result
             
             for part in parts:
-                part = part.strip()
+                part = part.strip() #removes initial and final spaces
                 if not part:
                     continue
                     
@@ -100,15 +90,15 @@ class BaseSerializer(serializers.Serializer):
         if not self._allowed_fields_map:
             return
         
-        # Get all top-level field names from the allowed map
+        # get all top-level field names from the allowed map
         allowed_keys = set(self._allowed_fields_map.keys())
         
-        # Remove fields not in the allowed list
+        # remove fields not in the allowed list
         for field_name in list(self.fields.keys()):
             if field_name not in allowed_keys:
                 self.fields.pop(field_name, None)
         
-        # Apply filtering to nested serializers
+        # apply filtering to nested serializers
         for field_name, nested_map in self._allowed_fields_map.items():
             if nested_map and field_name in self.fields:
                 field = self.fields[field_name]
@@ -324,27 +314,25 @@ class BaseModelSerializer(serializers.ModelSerializer, BaseSerializer):
         help_text="Indicates if the record can be deleted"
     )
     
-    # Timestamp fields (can be removed with remove_audit=True)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     created_by = serializers.CharField(read_only=True)
     updated_by = serializers.CharField(read_only=True)
-    deleted_at = serializers.DateTimeField(read_only=True)
     
-    # Add AUDIT_FIELDS for BaseSerializer's _remove_audit_fields method
+    
     AUDIT_FIELDS = BaseSerializer.AUDIT_FIELDS + [
-        'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
+        'created_at', 'updated_at', 'created_by', 'updated_by', 
     ]
     
     class Meta:
         abstract = True
         fields = [
-            'id', 'is_active', 'is_deleted', 'is_deletable',
-            'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
+            'id', 'is_active', 
+            'created_at', 'updated_at', 'created_by', 'updated_by',
         ]
         read_only_fields = [
-            'id', 'is_active', 'is_deleted', 'is_deletable',
-            'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
+            'id', 'is_active',  
+            'created_at', 'updated_at', 'created_by', 'updated_by', 
         ]
     
     def __init__(self, *args, **kwargs):
@@ -362,8 +350,7 @@ class BaseModelSerializer(serializers.ModelSerializer, BaseSerializer):
             'remove_audit': kwargs.pop('remove_audit', False)
         }
         
-        # Call ModelSerializer.__init__ first
-        super(serializers.ModelSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         
         # Now apply BaseSerializer's field filtering
         self._initialize_field_filtering()
@@ -412,7 +399,7 @@ class BaseModelSerializer(serializers.ModelSerializer, BaseSerializer):
         # If there are errors, raise exception if requested
         if self._errors:
             if raise_exception:
-                self._raise_validation_error(is_violated)
+                serializers.ValidationError(is_violated)
         
         return not bool(self._errors)
     
@@ -511,25 +498,24 @@ class BaseModelSerializer(serializers.ModelSerializer, BaseSerializer):
         
         return is_violated
     
+    
     def create(self, validated_data):
-        """
-        Override create to handle audit fields and custom logic.
-        """
-        # Remove audit fields if they somehow got into validated_data
-        for audit_field in self.AUDIT_FIELDS:
-            validated_data.pop(audit_field, None)
-        
-        # Set default values if not provided
+        request = self.context.get('request')
+
+        if request and hasattr(request, 'user'):
+            validated_data.setdefault('created_by', request.user)
+            validated_data.setdefault('updated_by', request.user)
+
         validated_data.setdefault('is_active', True)
-        validated_data.setdefault('is_deleted', False)
-        
-        # Call parent create method
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
         """
         Override update to handle audit fields and custom logic.
         """
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
         # Remove audit fields that shouldn't be updated
         for audit_field in self.AUDIT_FIELDS:
             validated_data.pop(audit_field, None)
