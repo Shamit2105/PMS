@@ -5,10 +5,10 @@ from base.models import BaseModel
 from projects.models import Story, ProjectMember,Project
 
 class Ticket(BaseModel):
-    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='tickets')
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='ticket')
     title = models.CharField(max_length=100)
     description = models.TextField()
-    assigned_member = models.ForeignKey(ProjectMember, on_delete=models.CASCADE, related_name='assigned_member')
+    assigned_member = models.ForeignKey(ProjectMember, on_delete=models.CASCADE, related_name='ticket')
     status = models.CharField(max_length=50)
     priority = models.CharField(max_length=50)
     type = models.CharField(max_length=50)

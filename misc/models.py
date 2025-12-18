@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Country(BaseModel):
-    name=models.CharField(max_length=50)
+    name=models.CharField(max_length=50,unique=True)
     code = models.CharField(max_length=10)
 
     class Meta:
@@ -22,10 +22,14 @@ class State(BaseModel):
 
         verbose_name = 'State'
         verbose_name_plural = 'States'
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'country'], name='unique_state_name_per_country'),
+            models.UniqueConstraint(fields=['code', 'country'], name='unique_state_code_per_country')
+        ]
 
 class City(BaseModel):
-    name=models.CharField(max_length=50)
-    code = models.CharField(max_length=10)
+    name=models.CharField(max_length=50,)
+    code = models.CharField(max_length=10,)
     state=models.ForeignKey(to=State, on_delete=models.CASCADE, related_name='cities')
 
     class Meta:
@@ -33,6 +37,10 @@ class City(BaseModel):
 
         verbose_name = 'City'
         verbose_name_plural = 'Cities'
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'state'], name='unique_city_name_per_state'),
+            models.UniqueConstraint(fields=['code', 'state'], name='unique_city_code_per_state')
+        ]
 
 class Address(BaseModel):
     primary_address = models.TextField()

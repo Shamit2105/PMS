@@ -12,10 +12,10 @@ router = DefaultRouter()
 router.register(r'profile', UserProfileViewSet, basename='userprofile')
 
 urlpatterns = [
-    path('api/auth/signup/', UserProfileSignupView.as_view(), name='user-signup'),
-    path('api/auth/login/', UserLoginView.as_view(), name='user-login'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
-    path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token-verify'),
+    path('signup/', UserProfileSignupView.as_view(), name='user-signup'),
+    path('login/', UserLoginView.as_view(), name='user-login'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('token/verify/', TokenVerifyView.as_view(), name='token-verify'),
     
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]

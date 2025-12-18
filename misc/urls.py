@@ -1,16 +1,12 @@
-from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
-    CountryViewSet, StateViewSet, 
-    CityViewSet, AddressViewSet
-)
+from django.urls import path,include
 
-router = DefaultRouter()
-router.register(r'countries', CountryViewSet, basename='country')
-router.register(r'states', StateViewSet, basename='state')
-router.register(r'cities', CityViewSet, basename='city')
-router.register(r'addresses', AddressViewSet, basename='address')
+from .views import CountryViewSet
 
-urlpatterns = [
-    path('api/', include(router.urls)),
+country_router = DefaultRouter()
+country_router.register(r"",CountryViewSet,basename='country')
+
+
+urlpatterns=[
+    path("countries/",include(country_router.urls))
 ]

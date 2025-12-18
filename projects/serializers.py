@@ -3,96 +3,93 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from datetime import datetime,date
 
+from base.models import BaseModel
+
 from .models import Project,ProjectMember,Story
 from base.serializers import BaseModelSerializer,BaseSerializer
 
 User = get_user_model()
 
 class ProjectMemberSerializer(BaseModelSerializer):
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = ProjectMember
-        fields = ['id', 'project_id', 'user_id', 'role', 'created_at', 
+        fields = ['id', 'project', 'user', 'role', 'created_at',
                  'updated_at', 'created_by', 'updated_by', 'is_active']
-        read_only_fields = ['id q', 'created_at', 'updated_at', 
-                           'created_by', 'updated_by', 'is_active']
+
 
 class ProjectMemberCreateUpdateSerializer(BaseModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
 
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = ProjectMember
         fields = ['user','role','project']
 
     def validate(self,attrs):
-        if self.instance:
-            project_id = attrs['project']
-            user_id = attrs['user']
-        else:
-            project_id=None
-            user_id = attrs['user']
-        if project_id and user_id:
-            existing = ProjectMember.objects.filter(project=project_id,user=user_id().exclude(pk=getattr(self.instance,'pk',None)))
+        project= attrs['project']
+        user = attrs['user']
+
+        if self.instance: #update going on
+            if not project:
+                project = self.instance.project
+            if not user:
+                user = self.instance.user
+
+        if project and user:
+            existing = ProjectMember.objects.filter(project=project, user=user)
+            if self.instance:
+                existing = existing.exclude(pk=self.instance.pk)
+
             if existing.exists():
-                raise serializers.ValidationError({'user_id':'This user already has a role in this project'})
-        
-        valid_roles = ['Manager','BackEndDeveloper','FrontEndDeveloper',]
-        role = attrs.get('role',getattr(self.instance,'role',None))
-        if role and role not in valid_roles:
-            raise serializers.ValidationError({
-                'role':f'Role must be one of: {",".join(valid_roles)}'
-            })
-        return attrs
-    
+                raise serializers.ValidationError("User already has a role in this project")
+
     def create(self, validated_data):
         return super().create(validated_data)
-    
 
 
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
 
 class StorySerializer(BaseModelSerializer):
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = Story
-        fields = ['id', 'project_id', 'title', 'description', 'status',
+        fields = ['id', 'project', 'title', 'description', 'status',
                  'created_at', 'updated_at', 'created_by', 'updated_by', 'is_active']
-        read_only_fields = ['id', 'created_at', 'updated_at', 
-                           'created_by', 'updated_by', 'is_active']
-        
-    
+
+
+
 class StoryCreateUpdateSerializer(BaseModelSerializer):
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = Story
         fields = ['project','title','description','status',]
-    
+
     def validate(self,attrs):
-        #title = attrs.get('title',getattr(self.instance,'title',''))
+
         valid_statuses = ['todo', 'in_progress', 'review', 'done', 'blocked']
         status = attrs['status']
         if status and status not in valid_statuses:
             raise serializers.ValidationError({
                 'status': f'Status must be one of: {", ".join(valid_statuses)}'
             })
-        
+
         return attrs
-    
+
     def create(self, validated_data):
         return super().create(validated_data)
 
 class ProjectSerializer(BaseModelSerializer):
     stories = StorySerializer(many=True,read_only = True)
     project_members = ProjectMemberSerializer(many=True,read_only=True)
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = Project
         fields = [
-            'id', 'name', 'description', 'start_date', 'end_date', 'status',
-            'created_at', 'updated_at', 'created_by', 'updated_by', 'is_active',
+            'name', 'description', 'start_date', 'end_date', 'status',
             'stories','project_members',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 
-                           'created_by', 'updated_by', 'is_active']
+
 
 class ProjectCreateUpdateSerializer(BaseModelSerializer):
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = Project
         fields = ['name','description','start_date','end_date','status']
 
