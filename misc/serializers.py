@@ -1,8 +1,6 @@
 from numpy.char import strip
 from rest_framework import serializers
 from django.db import transaction
-
-
 from base.serializers import BaseModelSerializer
 from .models import Address,City,State,Country
 
@@ -35,12 +33,12 @@ class CountryCreateUpdateSerializer(BaseModelSerializer):
     
 class StateSerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
-        model = Country
+        model = State
         fields = ['name','code','country']
     
 class StateCreateUpdateSerializer():
     class Meta(BaseModelSerializer.Meta):
-        model= Country
+        model= State
         fields = ['name','code','country']
 
     def validate(self,attrs):
@@ -62,12 +60,12 @@ class StateCreateUpdateSerializer():
 
 class CitySerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
-        model = Country
+        model = City
         fields = ['name','code','state']
 
 class CityCreateUpdateSerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
-        model= Country
+        model= City
         fields = ['name','code','state']
 
     def validate(self,attrs):
@@ -96,11 +94,12 @@ class AddressCreateUpdateSerializer(BaseModelSerializer):
         model = Address
         fields = ['primary_address','secondary_address','pincode','city']
 
-    def validate_pincode(self,attrs):
-        pincode = attrs['pincode']
-        if len(pincode)!=6:
+    def validate_pincode(self, value):
+        
+        if len(value)!=6:
             raise serializers.ValidationError("Pincode must be of 6 digits only!")
 
-        if not pincode.isdigit():
+        if not value.isdigit():
             raise serializers.ValidationError("Pincode must only contain numbers!")
-    
+        
+        return value

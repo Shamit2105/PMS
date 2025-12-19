@@ -4,11 +4,13 @@ from rest_framework.serializers import ValidationError
 
 from base.views import BaseViewSet
 from .models import Country
-from .serializers import (CountryCreateUpdateSerializer,CountrySerializer,StateCreateUpdateSerializer,StateSerializer,
-                          CityCreateUpdateSerializer,CitySerializer,AddressSerializer,AddressCreateUpdateSerializer)
+from .serializers import (
+    CountryCreateUpdateSerializer,CountrySerializer,StateCreateUpdateSerializer,StateSerializer,
+    CityCreateUpdateSerializer,CitySerializer,AddressSerializer,AddressCreateUpdateSerializer
+)
 
 
-class CountryViewSet(BaseViewSet,viewsets.ModelViewSet):
+class CountryViewSet(BaseViewSet, viewsets.ModelViewSet):
     queryset = Country.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ['name','code']
@@ -28,17 +30,13 @@ class CountryViewSet(BaseViewSet,viewsets.ModelViewSet):
             
             response_serializer = CountrySerializer(serializer.instance)
             return Response(
-                {
-                    'data': response_serializer.data
-                }
+                data=response_serializer.data
                 ,status=status.HTTP_201_CREATED
             )
         
         except ValidationError as e:
             return Response(
-                {
-                    "error":e.detail
-                }
+                {"error":e.detail}
                 ,status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -66,7 +64,7 @@ class StateViewSet(BaseViewSet,viewsets.ModelViewSet):
         try:
             serializer=self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            
+            print(serializer.errors)
             self.perform_create(serializer)
             
             response_serializer = StateSerializer(serializer.instance)
@@ -152,30 +150,28 @@ class AddressViewSet(BaseViewSet,viewsets.ModelViewSet):
         try:
             serializer=self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            
+            print(serializer.errors)
             self.perform_create(serializer)
             
             response_serializer = CitySerializer(serializer.instance)
             return Response(
-                {
-                    'data': response_serializer.data
-                }
-                ,status=status.HTTP_201_CREATED
+                
+                data=response_serializer.data,
+            
+                status=status.HTTP_201_CREATED
             )
         
         except ValidationError as e:
             return Response(
-                {
-                    "error":e.detail
-                }
-                ,status=status.HTTP_400_BAD_REQUEST
+                
+                error=e.detail,
+                
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         except Exception as e:
             return Response(
-                {
-
-                    'error':str(e)
-                }
-                ,status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                error=e,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                
             )

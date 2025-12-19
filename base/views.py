@@ -13,7 +13,7 @@ class BaseViewSet(viewsets.GenericViewSet):
     
     
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user,updated_by=self.request.user)
+        serializer.save(created_by=self.request.user)
     
     
 

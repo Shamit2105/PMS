@@ -6,7 +6,7 @@ class Country(BaseModel):
     name=models.CharField(max_length=50,unique=True)
     code = models.CharField(max_length=10)
 
-    class Meta:
+    class Meta(BaseModel.Meta):
         db_table = 'Countries'
 
         verbose_name = 'Country'
@@ -53,4 +53,3 @@ class Address(BaseModel):
 
         verbose_name = 'Address'
         verbose_name_plural = 'Addresses'
-

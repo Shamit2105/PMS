@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from base.models import BaseModel
 
 class Project(BaseModel):
+
     name = models.CharField(max_length=100)
     description = models.TextField()
     start_date = models.DateField(null=True,blank=True)
@@ -23,7 +24,7 @@ class ProjectMember(BaseModel):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='project_members')
     role = models.CharField(max_length=50)
 
-    class Meta: 
+    class Meta:
         db_table = 'Project_Members'
 
         verbose_name = 'Project Member'
@@ -40,5 +41,3 @@ class Story(BaseModel):
 
         verbose_name = 'Project Story'
         verbose_name_plural = 'Project Stories'
-
-

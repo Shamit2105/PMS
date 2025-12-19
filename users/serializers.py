@@ -8,6 +8,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import UserProfile
 from base.serializers import BaseModelSerializer
 from misc.models import Address, City, State, Country
+from misc.serializers import AddressCreateUpdateSerializer
 
 User = get_user_model()
 
@@ -49,6 +50,7 @@ class UserProfileSignupSerializer(BaseModelSerializer):
 
 
 class UserProfileUpdateSerializer(BaseModelSerializer):
+    address = AddressCreateUpdateSerializer(required=False)
     class Meta(BaseModelSerializer.Meta):
         model = UserProfile
         fields = [
@@ -57,11 +59,25 @@ class UserProfileUpdateSerializer(BaseModelSerializer):
         read_only_fields = ['id','dob']
     
     def update(self, instance, validated_data):
+        address_data = validated_data.pop("address",None)
+        
         with transaction.atomic():
             for attr, value in validated_data.items():
                 setattr(instance, attr, value)
             
             instance.save()
+
+            if address_data:
+                address_instance = instance.address
+                if address_instance:
+                    for attr, value in address_data.items():
+                        setattr(address_instance, attr, value)
+                    address_instance.save()
+                else:
+                    new_address = Address.objects.create(**address_data)
+                    instance.address = new_address
+                    instance.save()
+                  
             return instance
 
 class UserProfileViewSerializer(BaseModelSerializer):
@@ -90,3 +106,4 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         }
 
         return data
+    

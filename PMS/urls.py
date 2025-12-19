@@ -10,6 +10,10 @@ urlpatterns = [
 
     path('projects/',include('projects.urls')),
 
-    path('tickets/',include("tickets.urls"))
+    path('tickets/',include("tickets.urls")),
+    
+    path('accounts/', include('allauth.urls')),
+
+    path('oauth/',include("oauth.urls"))
     
 ]
