@@ -5,7 +5,7 @@ from .views import OAuthUserProfileViewSet,github_oauth_callback
 
 router = DefaultRouter()
 
-router.register(r"",OAuthUserProfileViewSet,basename='user_profiles')
+router.register(r"",OAuthUserProfileViewSet,basename='o_auth')
 
 
 urlpatterns=[

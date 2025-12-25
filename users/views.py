@@ -6,7 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.serializers import ValidationError
+from rest_framework.exceptions import ValidationError
+import logging
 
 from .models import UserProfile
 from .serializers import (
@@ -19,6 +20,8 @@ from .serializers import (
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
+
 class UserProfileSignupView(generics.CreateAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSignupSerializer
@@ -27,8 +30,13 @@ class UserProfileSignupView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         
         try:
-            serializer = self.get_serializer(data=request.data)
+            logger.info(
+                "Signup attempt",
+                extra={"user_id": getattr(self.request.user, "id", None)}
+            )
 
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             instance = serializer.save()
             
             refresh = RefreshToken.for_user(instance.user)
@@ -51,8 +59,15 @@ class UserProfileSignupView(generics.CreateAPIView):
             }
             
             return Response(response_data, status=status.HTTP_201_CREATED)
-            
+
+        except ValidationError as e:
+            return Response(
+                e.detail or e.default_detail,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         except Exception as e:
+            logger.exception("User signup failed because of "+ str(e))
             return Response(
                 {
                     'error': str(e)
@@ -65,18 +80,17 @@ class UserLoginView(TokenObtainPairView):
     permission_classes = [permissions.AllowAny]
     serializer_class = CustomTokenObtainPairSerializer
 
-class UserProfileViewSet(viewsets.GenericViewSet,generics.RetrieveAPIView,generics.UpdateAPIView):
-    queryset = UserProfile.objects.all()
+class UserProfileViewSet(viewsets.ModelViewSet):
+    
     permission_classes = [permissions.IsAuthenticated]
     
+    def get_queryset(self):
+        return UserProfile.objects.filter(user=self.request.user)
+
     def get_serializer_class(self):
         if self.action == 'update' or self.action == 'partial_update' or self.action=='patch':
             return UserProfileUpdateSerializer
         return UserProfileViewSerializer
-    
-    def get_object(self):
-        return get_object_or_404(UserProfile, user=self.request.user)
-    
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -90,13 +104,12 @@ class UserProfileViewSet(viewsets.GenericViewSet,generics.RetrieveAPIView,generi
             },
             status=status.HTTP_200_OK
         )
+    
     def perform_create(self, serializer):
-        # 🔑 IMPORTANT: bind OAuth user explicitly
         serializer.save(user=self.request.user)
-
-    def perform_update(self, serializer):
-        # 🔑 IMPORTANT: DO NOT pass updated_by here
-        serializer.save(user=self.request.user)
+    
+    def perform_update(self,serializer):
+        serializer.save(updated_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
         try:

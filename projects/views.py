@@ -11,7 +11,8 @@ class ProjectView(BaseViewSet, viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ['name','description']
     ordering_fields = ['name','start_date','end_date','created_at']
-    
+    lookup_field = 'id'          # or 'uuid'
+    lookup_url_kwarg = 'pk'
 
     def get_serializer_class(self):
         

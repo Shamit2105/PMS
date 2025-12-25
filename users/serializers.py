@@ -4,6 +4,7 @@ from django.db import transaction
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import ValidationError
 
 from .models import UserProfile
 from base.serializers import BaseModelSerializer
@@ -27,12 +28,12 @@ class UserProfileSignupSerializer(BaseModelSerializer):
     
     def validate(self, data):
         if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError({"password": "Passwords do not match"})
+            raise ValidationError({"password": "Passwords do not match"})
         return data
 
     def validate_username(self, username):
         if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("Username already exists. Please try another one")
+            raise ValidationError("Username already exists. Please try another one")
         return username
     
     def create(self, validated_data):

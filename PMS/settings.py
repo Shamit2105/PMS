@@ -80,6 +80,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -87,7 +88,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',
+]
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
 ]
 
 REST_FRAMEWORK = {
@@ -98,6 +104,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    "DEFAULT_PAGINATION_CLASS":
+        "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 1,
 }
 
 ROOT_URLCONF = 'PMS.urls'
@@ -120,6 +129,26 @@ TEMPLATES = [
 WSGI_APPLICATION = 'PMS.wsgi.application'
 LOGIN_REDIRECT_URL = "/oauth/github/success/"
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -179,6 +208,39 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME_GRACE_PERIOD': timedelta(minutes=0),
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "simple": {
+            "format": "[{levelname}] {message}",
+            "style": "{",
+        },
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+        },
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "django.log",
+            "formatter": "verbose",
+        },
+    },
+
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
 }
 
 

@@ -10,7 +10,7 @@ from base.views import BaseViewSet
 
 
 class TicketViewSet(BaseViewSet,viewsets.ModelViewSet):
-    queryset = Ticket.objects.all()
+    
     permission_classes = [permissions.IsAuthenticated]
     
     filterset_fields = ['status','is_active']
@@ -22,6 +22,9 @@ class TicketViewSet(BaseViewSet,viewsets.ModelViewSet):
             return TicketCreateUpdateSerializer
         return TicketSerializer
         
+    def get_queryset(self):
+        project_id = self.kwargs.get('project_id')
+        return Ticket.objects.filter(story__project=project_id)
     
     def create(self,request,*args,**kwargs):
         try:

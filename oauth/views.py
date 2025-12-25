@@ -16,7 +16,7 @@ from base.views import BaseViewSet
 from users.models import UserProfile
 from .serializers import OAuthUserProfileCreateSerializer,OAuthUserProfileViewSerializer,OAuthUserProfileUpdateSerializer
 
-class OAuthUserProfileViewSet(BaseViewSet,viewsets.ModelViewSet):
+class OAuthUserProfileViewSet(BaseViewSet, viewsets.ModelViewSet):
     
     permission_classes = [permissions.IsAuthenticated]
     
@@ -31,13 +31,10 @@ class OAuthUserProfileViewSet(BaseViewSet,viewsets.ModelViewSet):
             return OAuthUserProfileUpdateSerializer
         
         return OAuthUserProfileViewSerializer
+    
     def perform_create(self, serializer):
-        # 🔑 IMPORTANT: bind OAuth user explicitly
         serializer.save(user=self.request.user)
-
-    def perform_update(self, serializer):
-        # 🔑 IMPORTANT: DO NOT pass updated_by here
-        serializer.save(user=self.request.user)
+    
 
     def create(self, request, *args, **kwargs):
         try:

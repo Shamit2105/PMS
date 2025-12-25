@@ -3,6 +3,7 @@ from rest_framework import serializers
 import uuid
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import ValidationError
 
 from . import errors
 from .errors import PMValidationError, PMDataIntegrityException
@@ -264,31 +265,7 @@ class BaseModelSerializer(serializers.ModelSerializer, BaseSerializer):
         # Remove audit fields if requested
 
 
-    def is_valid(self, *, raise_exception=False):
-        """
-        Run default validation + unique_together validation with custom errors.
-
-        Args:
-            raise_exception (bool): If True, raises exception on validation error
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        # Run standard validation
-        super().is_valid(raise_exception=False)
-
-        is_violated = False
-
-        # Run unique_together validation if no other errors
-        if not self._errors:
-            is_violated = self.unique_together_validation()
-
-        # If there are errors, raise exception if requested
-        if self._errors:
-            if raise_exception:
-                serializers.ValidationError(is_violated)
-
-        return not bool(self._errors)
+   
 
     def __get_unique_fields(self):
         """
