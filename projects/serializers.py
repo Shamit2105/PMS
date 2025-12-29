@@ -11,10 +11,24 @@ from base.serializers import BaseModelSerializer,BaseSerializer
 User = get_user_model()
 
 class ProjectMemberSerializer(BaseModelSerializer):
+    user_first_name = serializers.CharField(
+        source="user.username", read_only=True
+    )
+    
+
     class Meta(BaseModelSerializer.Meta):
         model = ProjectMember
-        fields = ['id', 'project', 'user', 'role', 'created_at',
-                 'updated_at', 'created_by', 'updated_by', 'is_active']
+        fields = [
+            'id',
+            'project',
+            'user',
+            'user_first_name',
+            'role',
+            'created_at',
+            'updated_at',
+            'is_active'
+        ]
+
 
 
 class ProjectMemberCreateUpdateSerializer(BaseModelSerializer):
@@ -104,7 +118,21 @@ class ProjectCreateUpdateSerializer(BaseModelSerializer):
 
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
+        request = self.context.get("request")
+        user = request.user
+
         validated_data['start_date'] = date.today()
 
-        return super().create(validated_data)
+        project = super().create(validated_data)
+
+        ProjectMember.objects.create(
+            project=project,
+            user=user,
+            role="owner",  
+            created_by=user,
+            updated_by=user
+        )
+
+        return project

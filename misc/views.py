@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from base.views import BaseViewSet
-from .models import Country
+from .models import Country,State,City,Address
 from .serializers import (
     CountryCreateUpdateSerializer,CountrySerializer,StateCreateUpdateSerializer,StateSerializer,
     CityCreateUpdateSerializer,CitySerializer,AddressSerializer,AddressCreateUpdateSerializer
@@ -50,10 +50,17 @@ class CountryViewSet(BaseViewSet, viewsets.ModelViewSet):
             )
         
 class StateViewSet(BaseViewSet,viewsets.ModelViewSet):
-    queryset = Country.objects.all()
+
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ['name','code','country']
     ordering_fields = ['name','code','created_at','country']
+
+    def get_queryset(self):
+        qs = State.objects.all()
+        country_id = self.request.query_params.get("country")
+        if country_id:
+            qs = qs.filter(country_id=country_id)
+        return qs
 
     def get_serializer_class(self):
         if self.action in ['create','update','partial_update']:
@@ -93,10 +100,17 @@ class StateViewSet(BaseViewSet,viewsets.ModelViewSet):
             )
 
 class CityViewSet(BaseViewSet,viewsets.ModelViewSet):
-    queryset = Country.objects.all()
+    
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ['name','code','state']
     ordering_fields = ['name','code','created_at','state']
+
+    def get_queryset(self):
+        qs = City.objects.all()
+        state_id = self.request.query_params.get("state")
+        if state_id:
+            qs = qs.filter(state_id=state_id)
+        return qs
 
     def get_serializer_class(self):
         if self.action in ['create','update','partial_update']:
@@ -136,7 +150,7 @@ class CityViewSet(BaseViewSet,viewsets.ModelViewSet):
             )
         
 class AddressViewSet(BaseViewSet,viewsets.ModelViewSet):
-    queryset = Country.objects.all()
+    queryset = Address.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ['pincode','city']
     ordering_fields = ['pincode','created_at','city']

@@ -54,16 +54,26 @@ function SignUpForm() {
       navigate("/home"); 
 
     } catch (err) {
+        if (err.response && err.response.data) {
+    // Django usually sends field errors or detail
+    setError(
+      err.response.data.error ||
+      err.response.data.detail ||
+      JSON.stringify(err.response.data)
+    );
+  } else {
+    setError("Signup failed. Server not responding.");
+  }
       setSuccess("");
-      setError(err.response?.data?.detail || "Signup Failed");
+     
     }
   }
 
   return (
-    <div>
+      <div className="flex flex-col">
 
     <form
-      className="flex flex-col gap-4 max-w-md mx-auto p-6 bg-white rounded-xl shadow-md"
+        className="flex flex-col gap-4 max-w-md mx-auto p-6 bg-white rounded-xl shadow-md"
       onSubmit={handleSubmit}
       >
       <h2 className="text-2xl font-semibold text-center">

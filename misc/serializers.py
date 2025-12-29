@@ -7,13 +7,13 @@ from .models import Address,City,State,Country
 class CountrySerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
         model = Country
-        fields = ['name','code']
+        fields = ["id",'name','code']
 
 
 class CountryCreateUpdateSerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
         model= Country
-        fields = ['name','code',]
+        fields = ["id",'name','code',]
 
     def validate(self,attrs):
         name = attrs['name']
@@ -34,7 +34,7 @@ class CountryCreateUpdateSerializer(BaseModelSerializer):
 class StateSerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
         model = State
-        fields = ['name','code','country']
+        fields = ["id",'name','code','country']
     
 class StateCreateUpdateSerializer():
     class Meta(BaseModelSerializer.Meta):
@@ -61,7 +61,7 @@ class StateCreateUpdateSerializer():
 class CitySerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
         model = City
-        fields = ['name','code','state']
+        fields = ["id",'name','code','state']
 
 class CityCreateUpdateSerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
@@ -83,13 +83,46 @@ class CityCreateUpdateSerializer(BaseModelSerializer):
 
         return attrs
 
-class AddressSerializer(BaseModelSerializer):
-    class Meta(BaseModelSerializer.Meta):
+class AddressSerializer(serializers.ModelSerializer):
+    city_id = serializers.PrimaryKeyRelatedField(
+        source="city",
+        read_only=True
+    )
+    city_name = serializers.CharField(source="city.name", read_only=True)
+
+    state_id = serializers.PrimaryKeyRelatedField(
+        source="city.state",
+        read_only=True
+    )
+    state_name = serializers.CharField(source="city.state.name", read_only=True)
+
+    country_id = serializers.PrimaryKeyRelatedField(
+        source="city.state.country",
+        read_only=True
+    )
+    country_name = serializers.CharField(source="city.state.country.name", read_only=True)
+
+    class Meta:
         model = Address
-        fields = ['primary_address','secondary_address','pincode','city']
+        fields = [
+            "id",
+            "primary_address",
+            "secondary_address",
+            "pincode",
+            "city_id",
+            "city_name",
+            "state_id",
+            "state_name",
+            "country_id",
+            "country_name",
+        ]
+
 
     
 class AddressCreateUpdateSerializer(BaseModelSerializer):
+    city = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.all()
+    )
     class Meta(BaseModelSerializer.Meta):
         model = Address
         fields = ['primary_address','secondary_address','pincode','city']

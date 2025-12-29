@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from .models import UserProfile
 from base.serializers import BaseModelSerializer
 from misc.models import Address, City, State, Country
-from misc.serializers import AddressCreateUpdateSerializer
+from misc.serializers import AddressCreateUpdateSerializer,AddressSerializer
 
 User = get_user_model()
 
@@ -83,12 +83,12 @@ class UserProfileUpdateSerializer(BaseModelSerializer):
 
 class UserProfileViewSerializer(BaseModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
-
+    address = AddressSerializer(required=False,allow_null=True)
     class Meta(BaseModelSerializer.Meta):
         model = UserProfile
         fields = [
             'id', 'username', 'first_name', 'last_name', 'dob',
-            'contact_number', 'address','address'
+            'contact_number', 'address',
         ]
         read_only_fields = fields
 
