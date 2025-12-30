@@ -23,8 +23,13 @@ class TicketViewSet(BaseViewSet,viewsets.ModelViewSet):
         return TicketSerializer
         
     def get_queryset(self):
-        project_id = self.kwargs.get('project_id')
-        return Ticket.objects.filter(story__project=project_id)
+        project_id = self.kwargs.get('project_pk')
+        story_id = self.kwargs.get('story_pk')
+
+        return Ticket.objects.filter(
+            story_id=story_id,
+            story__project_id=project_id
+        )
     
     def create(self,request,*args,**kwargs):
         try:
@@ -48,12 +53,16 @@ class TicketViewSet(BaseViewSet,viewsets.ModelViewSet):
 
 
 class TicketCommentView(BaseViewSet,viewsets.ModelViewSet):
-    queryset = TicketComment.objects.all()
+    
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['status','is_active']
+    filterset_fields = ['is_active']
     search_fields = ['name','description']
     ordering_fields = ['name','start_date','end_date','created_at']
 
+
+    def get_queryset(self):
+        ticket_id = self.kwargs.get('ticket_pk')
+        return TicketComment.objects.filter(ticket_id=ticket_id)
 
     def get_serializer_class(self):
         if self.action in ['create','update']:
@@ -79,11 +88,17 @@ class TicketCommentView(BaseViewSet,viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         
 class TicketAttachmentView(BaseViewSet,viewsets.ModelViewSet):
-    queryset = TicketAttachment.objects.all()
+    
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['status','is_active']
+    filterset_fields = ['is_active']
     search_fields = ['name','description']
     ordering_fields = ['name','start_date','end_date','created_at']
+
+    def get_queryset(self):
+        ticket_id = self.kwargs.get('ticket_pk')
+        return TicketAttachment.objects.filter(comment__ticket_id=ticket_id)
+
+
 
     def get_serializer_class(self):
         if self.action in ['create','update']:

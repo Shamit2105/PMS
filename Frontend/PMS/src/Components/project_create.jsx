@@ -44,6 +44,8 @@ function CreateProject({initialData=null})
         }
     }
     return (
+        <div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
         <input
             name="name"
@@ -65,7 +67,7 @@ function CreateProject({initialData=null})
             name="start_date"
             value={formData.start_date}
             onChange={handleChange}
-        />
+            />
 
         <input
             type="date"
@@ -86,6 +88,8 @@ function CreateProject({initialData=null})
             {initialData ? "Update Project" : "Create Project"}
         </button>
         </form>
+        <button onClick={()=>navigate('/')}>Home</button>
+        </div>
     );
 
 }

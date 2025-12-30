@@ -18,7 +18,6 @@ function AddressForm({ onSuccess, existingAddress }) {
     pincode: "",
   });
 
-  /* ================= PREFILL (EDIT MODE) ================= */
   useEffect(() => {
     if (!existingAddress) return;
 
@@ -34,11 +33,9 @@ function AddressForm({ onSuccess, existingAddress }) {
     setSelectedState(existingAddress.state_id);
     setSelectedCity(existingAddress.city_id);
 
-    // allow dependent effects AFTER prefill
     setTimeout(() => setIsPrefilling(false), 0);
   }, [existingAddress]);
 
-  /* ================= LOAD COUNTRIES ================= */
   useEffect(() => {
     api
       .get("/misc/countries/")
@@ -46,7 +43,6 @@ function AddressForm({ onSuccess, existingAddress }) {
       .catch(console.error);
   }, []);
 
-  /* ================= LOAD STATES ================= */
   useEffect(() => {
     if (!selectedCountry || isPrefilling) return;
 
@@ -59,7 +55,6 @@ function AddressForm({ onSuccess, existingAddress }) {
     setCities([]);
   }, [selectedCountry, isPrefilling]);
 
-  /* ================= LOAD CITIES ================= */
   useEffect(() => {
     if (!selectedState || isPrefilling) return;
 
@@ -71,7 +66,6 @@ function AddressForm({ onSuccess, existingAddress }) {
     setSelectedCity("");
   }, [selectedState, isPrefilling]);
 
-  /* ================= HANDLERS ================= */
   function handleChange(e) {
     const { name, value } = e.target;
     setAddressData(prev => ({ ...prev, [name]: value }));
@@ -85,12 +79,12 @@ function AddressForm({ onSuccess, existingAddress }) {
       return;
     }
     try {
-        console.log("🚨 DEBUG typeof selectedCity:", typeof selectedCity);
-        console.log("🚨 DEBUG selectedCity:", selectedCity);
-      await api.patch("/users/profile/me/", {
+        console.log(" typeof selectedCity:", typeof selectedCity);
+        console.log(" selectedCity:", selectedCity);
+        await api.patch("/users/profile/me/", {
         address: {
           ...addressData,
-          city: selectedCity, // ✅ UUID ONLY
+          city: selectedCity, 
         },
       });
 
@@ -103,7 +97,6 @@ function AddressForm({ onSuccess, existingAddress }) {
     }
   }
 
-  /* ================= UI ================= */
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
 

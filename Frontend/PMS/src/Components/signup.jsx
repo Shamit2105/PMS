@@ -55,7 +55,6 @@ function SignUpForm() {
 
     } catch (err) {
         if (err.response && err.response.data) {
-    // Django usually sends field errors or detail
     setError(
       err.response.data.error ||
       err.response.data.detail ||
